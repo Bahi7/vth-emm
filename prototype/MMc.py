@@ -62,8 +62,8 @@ def get_dist(directory_path = "C:\\Users\\Enuma\\OneDrive\\Desktop\\100MB\\MM"):
 # initialization module
 NUMBER_SERVERS = 1
 TOKEN_ARRIVAL_MEAN  = 2
-SERVER_SERVICE_MEAN  = 200
-SIM_TIME  = 15_000
+SERVER_SERVICE_MEAN  = 8
+SIM_TIME  = 10_000
 arrivals, departures = [],[]
 in_queue, in_system  = [],[]
 tme_in_queue, len_in_queue = [],[]
@@ -159,8 +159,7 @@ elif dist == 3:
     batch_dist = stats.geom(p)
 elif dist == 4:
     path = input("Paste the Multi-Map files path:")
-    dist = get_dist()
-
+    dist = get_dist(path)
     batch_dist = stats.rv_discrete(values=(list(dist.keys()),list(dist.values())))
 
 
@@ -225,27 +224,34 @@ df['CDF'] = df['PMF'].cumsum()
 
 # Calculate the complement of the CDF
 df['CCDF'] = 1 - df['CDF']
-
+print("-------Start Plotting-------")
+num_ticks = 5
 # Create the plot
 fig, ax = plt.subplots()
-sns.barplot(x='Queue_length', y='CCDF', data=df, color='blue',ax=ax, alpha=0.5, label='CCDF')
-sns.barplot(x='Queue_length', y='P[X>K]', data=df, color='red',ax=ax, alpha=0.5, label='P[X>K]')
+sns.barplot(x='Queue_length', y='CCDF', data=df, color='blue', ax=ax, alpha=0.5, label='CCDF')
+sns.barplot(x='Queue_length', y='P[X>K]', data=df, color='red', ax=ax, alpha=0.5, label='P[X>K]')
 # set the labels and title
 ax.set_xlabel('Queue_length')
 ax.set_ylabel('CCDF')
 ax.set_title('Theoritical P[X>K] vs Emprical P[X>K] (CCDF)')
+
+# Set xticks
+ax.set_xticks(np.linspace(start=ax.get_xticks()[0], stop=ax.get_xticks()[-1], num=num_ticks))
+
+# Set xtick labels
+ax.set_xticklabels(np.round(np.linspace(start=df['Queue_length'].min(), stop=df['Queue_length'].max(), num=num_ticks),2))
 ax.legend()
 
-# Show only every nth label to prevent overcrowding 
-n = len(queue_lengths)/100  # the smaller this number the more labels will be shown
-
-[l.set_visible(False) for (i,l) in enumerate(plt.gca().xaxis.get_ticklabels()) if i % n != 0]
-
-plt.figure(figsize=(10,6))
-sns.barplot(x='Queue_length', y='PMF', data=df)
+fig, ax = plt.subplots()
+sns.barplot(x='Queue_length', y='PMF', data=df, ax=ax)
 plt.title('PMF for each Queue size')
-# Show only every nth label to prevent overcrowding 
-[l.set_visible(False) for (i,l) in enumerate(plt.gca().xaxis.get_ticklabels()) if i % n != 0]
+
+# Set xticks
+ax.set_xticks(np.linspace(start=ax.get_xticks()[0], stop=ax.get_xticks()[-1], num=num_ticks))
+
+# Set xtick labels
+ax.set_xticklabels(np.round(np.linspace(start=df['Queue_length'].min(), stop=df['Queue_length'].max(), num=num_ticks),2))
 
 plt.show()
+
 
