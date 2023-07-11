@@ -62,7 +62,7 @@ def get_dist(directory_path = "C:\\Users\\Enuma\\OneDrive\\Desktop\\100MB\\MM"):
 # initialization module
 NUMBER_SERVERS = 1
 TOKEN_ARRIVAL_MEAN  = 2
-SERVER_SERVICE_MEAN  = 8
+SERVER_SERVICE_MEAN  = 800
 SIM_TIME  = 10_000
 arrivals, departures = [],[]
 in_queue, in_system  = [],[]
@@ -77,7 +77,7 @@ def token_arrival(env, number_servers, batch_dist):
         batch_size = int(batch_dist.rvs())
         batch_sizes.append(batch_size)
         ## exponential distribution for arrivals
-        next_token = stats.expon.rvs(scale = 1/TOKEN_ARRIVAL_MEAN, size = 1)
+        next_token = stats.expon.rvs(scale = 1/TOKEN_ARRIVAL_MEAN)
         # Wait for the token
         yield env.timeout(next_token)
         time_of_arrival = env.now
@@ -102,7 +102,7 @@ def processing(env, number_servers, token_number, time_of_arrival):
         tme_in_queue.append(queue_out)
         len_in_queue.append(length)
         # normal distribution for the weighing process
-        r_Markovian = stats.expon.rvs(scale =1/SERVER_SERVICE_MEAN,size=1)
+        r_Markovian = stats.expon.rvs(scale =1/SERVER_SERVICE_MEAN)
         yield env.timeout(r_Markovian)
         #print('%3d permanece %.2f' % (token_number,r_Markovian))
         time_of_departure = env.now
@@ -146,20 +146,20 @@ RANDOM_SEEDS = [1234, 5678, 9012, 3456, 7890]
 np.random.seed(seed= RANDOM_SEEDS[1])
 
 ## defining the token arrival process
-dist = int(input("Choose your distribution:\n1-Zipf:  \n2-Uniform:  \n3-Geometric: \n4-Real Dist:\n"))
+dist = 3#int(input("Choose your distribution:\n1-Zipf:  \n2-Uniform:  \n3-Geometric: \n4-Real Dist:\n"))
 if dist == 1:
     s = float(input("Choose the s > 1 paremeter:"))
     batch_dist = stats.zipf(s)
 elif dist == 2:
-    a = float(input("Choose the lower bound a:"))
-    b = float(input("Choose the upper bound b:"))
+    a = 1#float(input("Choose the lower bound a:"))
+    b = 5#float(input("Choose the upper bound b:"))
     batch_dist = stats.uniform(a, b)
 elif dist == 3:
-    p = float(input("Choose the probability p:"))
+    p = 0.9#float(input("Choose the probability p:"))
     batch_dist = stats.geom(p)
 elif dist == 4:
-    path = input("Paste the Multi-Map files path:")
-    dist = get_dist(path)
+    #path = input("Paste the Multi-Map files path:")
+    dist = get_dist()
     batch_dist = stats.rv_discrete(values=(list(dist.keys()),list(dist.values())))
 
 
@@ -183,7 +183,6 @@ df_chart = pd.concat([df3, df4], axis = 1)
 avg_delay_inqueue = np.mean(in_queue)
 avg_delay_insyst  = np.mean(in_system)
 
-
 print('Expected value of Batch size :%.2f' % (expected_batch_size))
 print('Offer load: %.2f' %(rho))
 print('The utilization of the server is %.2f' % (utilization))
@@ -196,27 +195,44 @@ print('Little Lq %.2f' %  (TOKEN_ARRIVAL_MEAN*expected_batch_size*avg_delay_inqu
 #Calculate gamma
 try:
     gamma_k = np.roll(batch_dist.pdf(batch_sizes), 1)/(1 - batch_dist.cdf(batch_sizes))
+    x = min(batch_dist.pdf(batch_sizes))
 except AttributeError:
     gamma_k = np.roll(batch_dist.pmf(batch_sizes), 1)/(1 - batch_dist.cdf(batch_sizes))
-#Removing infinit values , because cdf  equals 1 at some point    
+    x = min(batch_dist.pmf(batch_sizes))
+#Removing infinite values, because cdf  equals 1 at some point    
 gamma_k = gamma_k[np.isfinite(gamma_k)]
 
 gamma_val = 1 - min(gamma_k)
-print("gamma 1 - min(c_k+1/bar{c_k+1}): ", gamma_val, "\ngamma if we naively picked 1 - min(c_k): ", 1 - min(batch_dist.pmf(batch_sizes)),"\nlambda / mu: " ,TOKEN_ARRIVAL_MEAN/ SERVER_SERVICE_MEAN)
+print("---> gamma 1 - min(c_k+1/bar{c_k+1}): ", gamma_val, "\n---> gamma if we naively picked 1 - min(c_k): ", 1 - x,"\n---> lambda / mu: " ,TOKEN_ARRIVAL_MEAN/ SERVER_SERVICE_MEAN)
 #Define the function for P(X > K)
+def p_n(n, lambda_val, mu_val, alpha, rho_val):
+    return n.apply(lambda x: 1 - rho_val if x == 0 else (1 - rho_val) * (lambda_val / mu_val) * (alpha + (lambda_val / mu_val))**(x - 1))
+
+
 def prob_func(k, lambda_val, mu_val, gamma_val, rho_val):
     return (lambda_val / mu_val ) * ((lambda_val / mu_val  + gamma_val) ** (k-1)) / (1 - (lambda_val / mu_val + gamma_val) * (1 - rho_val))
 
 
 # Extract the 'len' column to a list, which represents the queue lengths at each time step
 queue_lengths = df_length['Queue Lengths'].tolist()
+def px_n(n, lambda_val, mu_val, alpha, rho_val):
+    if n == 0:
+        return 1-rho_val
+    return (1 - rho_val) * (lambda_val/mu_val) * (alpha + (lambda_val/mu_val))**(n-1)
 
 # Assuming data_dict is your dictionary
 Queue_dist = get_probabilities(queue_lengths)
+for i in Queue_dist:
+    print(i, px_n(i, TOKEN_ARRIVAL_MEAN, SERVER_SERVICE_MEAN, p, rho))
 
-# Convert the dictionary to a DataFrame and sort by outcome
+
+# Convert the dictionary to a DataFrame and sort by the outcome
 df = pd.DataFrame(list(Queue_dist.items()), columns=['Queue_length', 'PMF']).sort_values('Queue_length')
-
+#geometric PMF
+df['P[X=n]'] = p_n(df['Queue_length'], TOKEN_ARRIVAL_MEAN, SERVER_SERVICE_MEAN, p, rho)
+print(1- rho)
+print(df.head(20))
+print(df['P[X=n]'].sum(), df['PMF'].sum())
 
 df['P[X>K]'] = prob_func(df['Queue_length'], TOKEN_ARRIVAL_MEAN, SERVER_SERVICE_MEAN, gamma_val, rho)
 # Calculate the CDF
@@ -225,33 +241,46 @@ df['CDF'] = df['PMF'].cumsum()
 # Calculate the complement of the CDF
 df['CCDF'] = 1 - df['CDF']
 print("-------Start Plotting-------")
-num_ticks = 5
-# Create the plot
+# Define the number of bins
+num_bins = 100
+for key, value in Queue_dist.items():
+    if value > 1:
+        print(f"The value for {key} is larger than 1.")
+        break
+
+# Create bins for 'Queue_length'
+df['Queue_length_bin'] = pd.cut(df['Queue_length'], bins=num_bins, labels=False)
+
+# Group by the bins and calculate the means for 'PMF' and 'CCDF'
+df_binned = df.groupby('Queue_length_bin').agg({'PMF': 'mean', 'CCDF': 'mean', 'P[X>K]': 'mean', 'P[X=n]': 'mean'}).reset_index()
+
+
+# Create the first plot
 fig, ax = plt.subplots()
-sns.barplot(x='Queue_length', y='CCDF', data=df, color='blue', ax=ax, alpha=0.5, label='CCDF')
-sns.barplot(x='Queue_length', y='P[X>K]', data=df, color='red', ax=ax, alpha=0.5, label='P[X>K]')
-# set the labels and title
+ax.bar(df_binned['Queue_length_bin'], df_binned['CCDF'], color='blue', alpha=0.5, label='CCDF')
+ax.bar(df_binned['Queue_length_bin'], df_binned['P[X>K]'], color='red', alpha=0.5, label='P[X>K]')
 ax.set_xlabel('Queue_length')
-ax.set_ylabel('CCDF')
-ax.set_title('Theoritical P[X>K] vs Emprical P[X>K] (CCDF)')
-
-# Set xticks
-ax.set_xticks(np.linspace(start=ax.get_xticks()[0], stop=ax.get_xticks()[-1], num=num_ticks))
-
-# Set xtick labels
-ax.set_xticklabels(np.round(np.linspace(start=df['Queue_length'].min(), stop=df['Queue_length'].max(), num=num_ticks),2))
+ax.set_title('Theoretical P[X>K] vs Empirical P[X>K] (CCDF)')
 ax.legend()
 
+
+
+# Create the first plot
 fig, ax = plt.subplots()
-sns.barplot(x='Queue_length', y='PMF', data=df, ax=ax)
-plt.title('PMF for each Queue size')
+#ax.bar(df_binned['Queue_length_bin'], df_binned['PMF'], color='blue', alpha=0.5, label='PMF')
+ax.bar(df_binned['Queue_length_bin'], df_binned['P[X=n]'], color='red', alpha=0.5, label='P[X=n]')
+ax.set_xlabel('Queue_length')
+ax.set_title('Theoretical P[X>K] vs Empirical P[X>K] (CCDF)')
+ax.legend()
 
-# Set xticks
-ax.set_xticks(np.linspace(start=ax.get_xticks()[0], stop=ax.get_xticks()[-1], num=num_ticks))
 
-# Set xtick labels
-ax.set_xticklabels(np.round(np.linspace(start=df['Queue_length'].min(), stop=df['Queue_length'].max(), num=num_ticks),2))
+# Create the second plot
+fig, ax = plt.subplots()
+ax.bar(df_binned['Queue_length_bin'],df_binned['PMF'], label='PMF')
+ax.set_xlabel('Queue_length')
+ax.set_title('PMF for each Queue size')
 
 plt.show()
+
 
 
