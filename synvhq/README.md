@@ -1,7 +1,7 @@
 
 # VTH Implementation
 
-This repository contains the implementation for a VTH (Volume Time Hiding) system. It is a part of a submission for ACM CCS (Association for Computing Machinery's Conference on Computer and Communications Security). The current version is for evaluation purposes only, with the full scheme to be shared later.
+This repository contains the implementation for the VTH scheme. The current version is for evaluation purposes only.
 
 ## Contents
 - `Server.cpp` - The server-side implementation.
