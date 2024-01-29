@@ -75,4 +75,4 @@ To run the VTH scheme:
   - As with Baseline 1, uncomment the `continue` statement in the `SQPD` function. Baseline 2 does not require changes to the `sendToCid` method, as it doesn't use dummy queries.
 
 ## Note for Evaluators
-This code is provided for evaluation purposes in the context of an ACM CCS submission. It represents a part of the larger scheme, which will be shared in its entirety at a later stage. As such, this implementation is not the final version and may undergo significant changes before the complete scheme is released.
+This code is provided for evaluation purposes in the context of an ACM CCS submission. As such, this implementation is not the final version and will undergo some changes before the complete scheme is released.
