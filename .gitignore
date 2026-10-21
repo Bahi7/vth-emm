@@ -1,0 +1,35 @@
+# Visual Studio
+.vs/
+x64/
+Debug/
+Release/
+*.user
+*.suo
+*.ipch
+*.VC.db
+*.VC.opendb
+
+# MinGW build of the prototype
+*.o
+*.exe
+
+# header-only dependencies dropped next to the solution
+third_party/
+
+# inputs and outputs of a run
+MM/
+serialized_data.bin
+*.csv
+*.bin
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.pdf
+
+__pycache__/
+.ipynb_checkpoints/
