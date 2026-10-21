@@ -2,12 +2,11 @@
 
 Implementation and evaluation harness of VTH, an encrypted multi-map whose
 leakage is controlled by *when* the server is accessed rather than by padding
-*how much* is accessed. The scheme comes from joint work with Seny Kamara and
-Tarik Moataz; the accompanying paper, in which the construction is called EXH,
-is under submission and will be cited here once it is public. The code in this
-repository is mine. I wrote it between July 2023 and January 2024 inside Tarik
-Moataz's [`latencyQT`](https://github.com/orochi89/latencyQT) repository, and
-this repository is that code with its git history, moved out on its own.
+*how much* is accessed. The scheme is from joint work with Seny Kamara and
+Tarik Moataz; the paper, in which the construction is called EXH, is under
+submission and will be cited here once it is public. The code comes from the
+[`latencyQT`](https://github.com/orochi89/latencyQT) repository (2023 and 2024)
+and keeps its history.
 
 ## The idea in one paragraph
 
@@ -55,7 +54,7 @@ prototype/   the first version (October and November 2023)
   MMc.py         a simpy simulation of the proxy queue as an M/M/1 and M^X/M/1
                  system fed with the real response-length distribution of a
                  multi-map (June and July 2023)
-  Main.tex       my June 2023 note on using queueing models to hide volume
+  Main.tex       a June 2023 note on using queueing models to hide volume
 ```
 
 ## Building and running the evaluation code
@@ -87,15 +86,10 @@ The prototype builds with MinGW `g++` and cereal only (`make CEREAL_INC=...` in
 `prototype/`); it is the first working version and is kept for the record rather
 than for use.
 
-## Provenance and license
+## License
 
-Everything here was written by me, Amine Bahi, between July 2023 and January
-2024; the commits are mine (the "Husky" author on two commits is the Windows
-account the Visual Studio project was created under) and Tarik Moataz's two
-commits edit the artifact README. The history was extracted from `latencyQT`
-with `git filter-repo`. The 60 MB of Enron multi-map dumps used as input were
-left out. A later two-client harness built on a later revision of these components (the
-position map encrypted and stored on the server) is in
-[TigroEXH](https://github.com/Bahi7/TigroEXH); that revision is not in this repository.
+The Enron multi-map dumps used as input are not included. A later two-client
+harness built on a later revision of these components is in
+[TigroEXH](https://github.com/Bahi7/TigroEXH).
 
-Released under the MIT License; see [LICENSE](LICENSE).
+MIT License; see [LICENSE](LICENSE).
