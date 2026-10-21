@@ -1,7 +1,6 @@
 #include "PathOram.h"
 
 
-//C:\\Users\\Enuma\\source\\repos\\SynVHQ\\x64\\Release
 static void deserializeData(std::unique_ptr<unsigned char* []>& data, const size_t& dataSize, const size_t& blockSize) {
 	std::ifstream is("serialized_data.bin", std::ios::binary);
 	
