@@ -94,7 +94,8 @@ Everything here was written by me, Amine Bahi, between July 2023 and January
 account the Visual Studio project was created under) and Tarik Moataz's two
 commits edit the artifact README. The history was extracted from `latencyQT`
 with `git filter-repo`. The 60 MB of Enron multi-map dumps used as input were
-left out. A later gRPC-based harness built on the same components is in
-[TigroEXH](https://github.com/Bahi7/TigroEXH).
+left out. A later two-client harness built on a later revision of these components (the
+position map encrypted and stored on the server) is in
+[TigroEXH](https://github.com/Bahi7/TigroEXH); that revision is not in this repository.
 
 Released under the MIT License; see [LICENSE](LICENSE).
